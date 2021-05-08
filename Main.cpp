@@ -1,14 +1,14 @@
-#include "SeeSaw.h"
+#include "RMS.h"
 
 /* Curren Taber & Joan Karstrom
  * Professor Hansen
  * CPSC 380-01
- * Project 3: See-Saw Simulator
+ * Project 4: Rate Monotonic Scheduler
  */
 
 // Main
 int main(int argc, char* argv[]) {
-  SeeSaw* s = new SeeSaw();
-  s->RunSimulation();
+  RMS* rms = new RMS();
+  rms->Run();
   return 0;
 }

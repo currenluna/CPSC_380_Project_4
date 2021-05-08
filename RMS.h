@@ -7,7 +7,7 @@ using namespace std;
 /* Curren Taber & Joan Karstrom
  * Professor Hansen
  * CPSC 380-01
- * Project 3: See-Saw Simulator
+ * Project 4: Rate Monotonic Scheduler
  */
 
 // Number of runs
@@ -19,11 +19,10 @@ using namespace std;
 // Semaphore name for Wilma
 #define SEM_WILMA_NAME "wilma"
 
-class SeeSaw {
+class RMS {
   public:
-    SeeSaw(); // Constructor
-    void RunSimulation(); // Runs the See-Saw Simulation
+    RMS(); // Constructor
+    void Run(); // Runs the program
   private:
-    static void* FredSee(void* arg); // Updates and prints Fred's height
-    static void* WilmaSaw(void* arg); // Updates and prints Wilma's height
+    static void* DoWork(void* arg); // A horribly inefficient function
 };
