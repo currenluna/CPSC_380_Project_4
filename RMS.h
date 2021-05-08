@@ -1,5 +1,6 @@
 #include <iostream>
 #include <pthread.h>
+#include <fcntl.h>
 #include <semaphore.h>
 #include <unistd.h>
 using namespace std;
