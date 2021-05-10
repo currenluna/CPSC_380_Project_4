@@ -1,6 +1,6 @@
 #include "RMS.h"
 
-/* Curren Taber & Joan Karstrom
+/* Curren Taber, Joan Karstrom, and Krishna Narayan
  * Professor Hansen
  * CPSC 380-01
  * Project 4: Rate Monotonic Scheduler
@@ -9,7 +9,11 @@
 sem_t* semFred;
 sem_t* semWilma;
 
-int i = ITERATION_COUNT;
+int i = PERIOD_COUNT;
+int workCount_1 = WORK_COUNT_1;
+int workCount_2 = WORK_COUNT_2;
+int workCount_3 = WORK_COUNT_3;
+int workCount_4 = WORK_COUNT_4;
 
 int runCounter_1 = 0;
 int runCounter_2 = 0;
@@ -40,13 +44,20 @@ void* RMS::DoWork(void* arg) {
   }
 
   // Multiplying operation
-  int curr = 1;
-  for (int j = 0; j < 5; j++) {
-    for (int i = 0; i < 10; i++) {
-      matrix[i][j] *= curr;
+  int count = *((int*)arg);
+  for (int x = 0; x < count; x++) {
+    int curr = 1;
+    for (int j = 0; j < 5; j++) {
+      for (int i = 0; i < 10; i++) {
+        matrix[i][j] *= curr;
+      }
+      for (int i = 0; i < 10; i++) {
+        matrix[i][j+5] *= curr;
+      }
     }
-    for (int i = 0; i < 10; i++) {
-      matrix[i][j+5] *= curr;
+    if (count == workCount_1) {
+      runCounter_1++;
+      cout << runCounter_1 << " ";
     }
   }
 
@@ -77,16 +88,17 @@ void RMS::Run() {
   pthread_t tid_3;
   pthread_t tid_4;
 
-  pthread_create(&tid_1, NULL, &DoWork, NULL); // Execute 100 times
-  pthread_create(&tid_2, NULL, &DoWork, NULL); // Execute 200 times
-  pthread_create(&tid_3, NULL, &DoWork, NULL); // Execute 400 times
-  pthread_create(&tid_4, NULL, &DoWork, NULL); // Execute 1600 times
+    cout << "here" << endl;
+  pthread_create(&tid_1, NULL, &DoWork, (void*)&workCount_1); // Execute 100 times
+  // pthread_create(&tid_2, NULL, &DoWork, (void*)&workCount_2); // Execute 200 times
+  // pthread_create(&tid_3, NULL, &DoWork, (void*)&workCount_3); // Execute 400 times
+  // pthread_create(&tid_4, NULL, &DoWork, (void*)&workCount_4); // Execute 1600 times
 
   // Joining the child threads with this thread
   pthread_join(tid_1, NULL);
-  pthread_join(tid_2, NULL);
-  pthread_join(tid_3, NULL);
-  pthread_join(tid_4, NULL);
+  // pthread_join(tid_2, NULL);
+  // pthread_join(tid_3, NULL);
+  // pthread_join(tid_4, NULL);
 
   sem_close(semFred);
   sem_close(semWilma);

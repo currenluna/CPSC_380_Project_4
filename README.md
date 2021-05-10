@@ -1,7 +1,7 @@
 # Assignment 4: Rate Monotonic Scheduler
 
 ## 1. IDENTIFYING INFO
-- Curren Taber & Joan Karstrom
+- Curren Taber, Joan Karstrom, and Krishna Narayan
 - Professor Hansen
 - CPSC 380-01: Operating Systems
 - May 11, 2021
