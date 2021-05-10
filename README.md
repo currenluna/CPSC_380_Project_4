@@ -18,4 +18,6 @@ When Main.cpp runs...
 
 ## 3. REFERENCES
 - [Passing Arguments to Threads](https://courses.engr.illinois.edu/cs241/fa2010/ppt/10-pthread-examples.pdf)
--
+- Operating System Concepts Textbook
+- [Setting Pthread Affinity](https://man7.org/linux/man-pages/man3/pthread_setaffinity_np.3.html)
+- [Using sched_setaffinity()](https://stackoverflow.com/questions/10490756/how-to-use-sched-getaffinity-and-sched-setaffinity-in-linux-from-c)

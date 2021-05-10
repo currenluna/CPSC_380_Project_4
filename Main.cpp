@@ -8,7 +8,6 @@
 
 // Main
 int main(int argc, char* argv[]) {
-  cout << "here" << endl;
   RMS* rms = new RMS();
   rms->Run();
   return 0;
