@@ -6,10 +6,6 @@
  * Project 4: Rate Monotonic Scheduler
  */
 
-sem_t* semFred;
-sem_t* semWilma;
-
-int i = PERIOD_COUNT;
 int workCount_1 = WORK_COUNT_1;
 int workCount_2 = WORK_COUNT_2;
 int workCount_3 = WORK_COUNT_3;
@@ -27,46 +23,101 @@ int missCounter_4 = 0;
 
 double matrix[10][10];
 
-// Constructor
-RMS::RMS() {
+// Semaphores for the Threads
+sem_t* sem1A;
+sem_t* sem1B;
+sem_t* sem2A;
+sem_t* sem2B;
+sem_t* sem3A;
+sem_t* sem3B;
+sem_t* sem4A;
+sem_t* sem4B;
 
-}
+// Constructor
+RMS::RMS() {}
 
 // A horribly inefficient function
-void RMS::DoWork(void* arg) {
+void RMS::DoWork() {
   // Initializing the matrix to 1's
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
       matrix[i][j] = 1.0;
     }
   }
-
   // Multiplying operation
-  int count = *((int*)arg);
-  cout << count << endl;
-  for (int x = 0; x < count; x++) {
-    double curr = 1.0;
-    for (int j = 0; j < 5; j++) {
-      for (int i = 0; i < 10; i++) {
-        curr *= matrix[i][j];
-      }
-      for (int i = 0; i < 10; i++) {
-        curr *= matrix[i][j+5];
-      }
+  double curr = 1.0;
+  for (int j = 0; j < 5; j++) {
+    for (int i = 0; i < 10; i++) {
+      curr *= matrix[i][j];
+    }
+    for (int i = 0; i < 10; i++) {
+      curr *= matrix[i][j+5];
     }
   }
-
-  if (count == workCount_1) {
-    cout << "1" << endl;
-  } else if (count == workCount_2) {
-    cout << "2" << endl;
-  } else if (count == workCount_3) {
-    cout << "3" << endl;
-  } else {
-    cout << "4" << endl;
-  }
-  // sem_post(semFred);
   pthread_exit(0);
+}
+
+void* RMS::Scheduler(void* arg) {
+  for (int i = 0; i < PERIOD_COUNT; i++) {
+    for (int j = 0; j < UNIT_COUNT; j++) {
+      // Schedule T1 Every Time Unit
+
+
+      // Schedule T2 Every 2 Time Units
+      if (j % 2 == 0) {
+
+      }
+
+      // Schedule T3 Every 4 Time Units
+      if (j % 4 == 0) {
+
+      }
+
+      // Schedule T4 Every 16 Time Units
+      if (j % 16 == 0) {
+
+      }
+      usleep(10000); // 10 milliseconds
+    }
+  }
+}
+
+void* RMS::Thread1(void* arg) {
+  while (true) {
+    sem_wait(sem1A);
+    for (int i = 0; i < WORK_COUNT_1; i++){
+      DoWork();
+    }
+    runCounter_1++;
+    sem_post(sem1B);
+  }
+}
+
+void* RMS::Thread2(void* arg) {
+  while (true) {
+    for (int i = 0; i < WORK_COUNT_2; i++){
+      DoWork();
+    }
+    runCounter_2++;
+  }
+}
+
+void* RMS::Thread3(void* arg) {
+  while (true) {
+    for (int i = 0; i < WORK_COUNT_3; i++){
+      DoWork();
+      runCounter_3++;
+    }
+  }
+}
+
+void* RMS::Thread4(void* arg) {
+  while (true) {
+    for (int i = 0; i < WORK_COUNT_4; i++){
+      runCounter_4++;
+      DoWork();
+    }
+  }
 }
 
 // Runs the program
@@ -101,55 +152,107 @@ void RMS::Run() {
   //   }
   // }
 
-  sem_unlink(SEM_FRED_NAME);
-  semFred = sem_open(SEM_FRED_NAME, O_CREAT, 0777, 0);
-  if (semFred == SEM_FAILED) {
-    cout << "Failed to open semaphore for Fred" << endl;
+  // Setting Semaphore 1A
+  sem_unlink(SEM_1_A);
+  sem1A = sem_open(SEM_1_A, O_CREAT, 0777, 0);
+  if (sem1A == SEM_FAILED) {
+    cout << "Failed to open Semaphore 1A" << endl;
     exit(-1);
   }
 
-  sem_unlink(SEM_WILMA_NAME);
-  semWilma = sem_open(SEM_WILMA_NAME, O_CREAT, 0777, 1);
-  if (semWilma == SEM_FAILED) {
-    cout << "Failed to open semaphore for Wilma" << endl;
+  // Setting Semaphore 1B
+  sem_unlink(SEM_1_B);
+  sem1B = sem_open(SEM_1_B, O_CREAT, 0777, 0);
+  if (sem1B == SEM_FAILED) {
+    cout << "Failed to open Semaphore 1B" << endl;
     exit(-1);
   }
 
-  // Creating child threads
+  // Setting Semaphore 2A
+  sem_unlink(SEM_2_A);
+  sem2A = sem_open(SEM_2_A, O_CREAT, 0777, 0);
+  if (sem2A == SEM_FAILED) {
+    cout << "Failed to open Semaphore 2A" << endl;
+    exit(-1);
+  }
+
+  // Setting Semaphore 2B
+  sem_unlink(SEM_2_B);
+  sem2B = sem_open(SEM_2_B, O_CREAT, 0777, 0);
+  if (sem2B == SEM_FAILED) {
+    cout << "Failed to open Semaphore 2B" << endl;
+    exit(-1);
+  }
+
+  // Setting Semaphore 3A
+  sem_unlink(SEM_3_A);
+  sem3A = sem_open(SEM_3_A, O_CREAT, 0777, 0);
+  if (sem3A == SEM_FAILED) {
+    cout << "Failed to open Semaphore 3A" << endl;
+    exit(-1);
+  }
+
+  // Setting Semaphore 3B
+  sem_unlink(SEM_3_B);
+  sem3B = sem_open(SEM_3_B, O_CREAT, 0777, 0);
+  if (sem3B == SEM_FAILED) {
+    cout << "Failed to open Semaphore 3B" << endl;
+    exit(-1);
+  }
+
+  // Setting Semaphore 4A
+  sem_unlink(SEM_4_A);
+  sem4A = sem_open(SEM_4_A, O_CREAT, 0777, 0);
+  if (sem4A == SEM_FAILED) {
+    cout << "Failed to open Semaphore 4A" << endl;
+    exit(-1);
+  }
+
+  // Setting Semaphore 4B
+  sem_unlink(SEM_4_B);
+  sem4B = sem_open(SEM_4_B, O_CREAT, 0777, 0);
+  if (sem4B == SEM_FAILED) {
+    cout << "Failed to open Semaphore 4B" << endl;
+    exit(-1);
+  }
+
+  pthread_t tid_S;
   pthread_t tid_1;
   pthread_t tid_2;
   pthread_t tid_3;
   pthread_t tid_4;
 
-  // pthread_setschedparam(tid_1, policy, &param);
-  // pthread_setschedparam(tid_2, policy, &param);
-  // pthread_setschedparam(tid_3, policy, &param);
-  // pthread_setschedparam(tid_4, policy, &param);
+  pthread_create(&tid_S, &attr, &Scheduler, NULL); // Scheduler Thread
+  pthread_create(&tid_1, &attr, &Thread1, NULL); // Execute 100 times
+  pthread_create(&tid_2, &attr, &Thread2, NULL); // Execute 200 times
+  pthread_create(&tid_3, &attr, &Thread3, NULL); // Execute 400 times
+  pthread_create(&tid_4, &attr, &Thread4, NULL); // Execute 1600 times
 
-
-  pthread_create(&tid_1, &attr, &DoWork, (void*)&workCount_1); // Execute 100 times
-  pthread_create(&tid_2, &attr, &DoWork, (void*)&workCount_2); // Execute 200 times
-  pthread_create(&tid_3, &attr, &DoWork, (void*)&workCount_3); // Execute 400 times
-  pthread_create(&tid_4, &attr, &DoWork, (void*)&workCount_4); // Execute 1600 times
-
-  cout << sched_get_priority_max(policy) << endl;
-  cout << sched_get_priority_min(policy) << endl;
-
-  int rc = pthread_getschedparam(tid_1, &policy, &param);
-  cout << rc << endl;
-  rc = pthread_getschedparam(tid_2, &policy, &param);
-  cout << rc << endl;
-  rc = pthread_getschedparam(tid_3, &policy, &param);
-  cout << rc << endl;
-  rc = pthread_getschedparam(tid_4, &policy, &param);
-  cout << rc << endl;
+  // cout << sched_get_priority_max(policy) << endl;
+  // cout << sched_get_priority_min(policy) << endl;
+  //
+  // int rc = pthread_getschedparam(tid_1, &policy, &param);
+  // cout << rc << endl;
+  // rc = pthread_getschedparam(tid_2, &policy, &param);
+  // cout << rc << endl;
+  // rc = pthread_getschedparam(tid_3, &policy, &param);
+  // cout << rc << endl;
+  // rc = pthread_getschedparam(tid_4, &policy, &param);
+  // cout << rc << endl;
 
   // Joining the child threads with this thread
+  pthread_join(tid_S, NULL);
   pthread_join(tid_1, NULL);
   pthread_join(tid_2, NULL);
   pthread_join(tid_3, NULL);
   pthread_join(tid_4, NULL);
 
-  sem_close(semFred);
-  sem_close(semWilma);
+  sem_close(sem1A);
+  sem_close(sem1B);
+  sem_close(sem2A);
+  sem_close(sem2B);
+  sem_close(sem3A);
+  sem_close(sem3B);
+  sem_close(sem4A);
+  sem_close(sem4B);
 }
