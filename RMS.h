@@ -16,7 +16,7 @@ using namespace std;
 #define PERIOD_COUNT 10
 #define UNIT_COUNT 16
 #define WORK_COUNT_1 100
-#define WORK_COUNT_2 200
+#define WORK_COUNT_2 2000
 #define WORK_COUNT_3 400
 #define WORK_COUNT_4 1600
 
