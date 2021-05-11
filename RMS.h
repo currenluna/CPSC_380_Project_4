@@ -21,9 +21,14 @@ using namespace std;
 
 // Semaphore name for Fred
 #define SEM_SCHED "semSched"
-#define SEM_2 "sem2"
-#define SEM_3 "sem3"
-#define SEM_4 "sem4"
+#define SEM_1_A "sem1A"
+#define SEM_1_B "sem1B"
+#define SEM_2_A "sem2A"
+#define SEM_2_B "sem2B"
+#define SEM_3_A "sem3A"
+#define SEM_3_B "sem3B"
+#define SEM_4_A "sem4A"
+#define SEM_4_B "sem4B"
 
 
 class RMS {
