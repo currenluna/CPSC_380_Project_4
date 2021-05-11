@@ -121,7 +121,7 @@ void* RMS::Scheduler(void* arg) {
       usleep(1000); // 1 millisecond
     }
   }
-
+  working = false;
   cout << "-----------" << endl;
   cout << "Thread 1 ran " << runCounter_1 << " times." << endl;
   cout << "Thread 2 ran " << runCounter_2 << " times." << endl;
@@ -139,7 +139,6 @@ void* RMS::Scheduler(void* arg) {
   sem_post(sem2A);
   sem_post(sem3A);
   sem_post(sem4A);
-  working = false;
 
   pthread_exit(0);
 }
@@ -147,6 +146,7 @@ void* RMS::Scheduler(void* arg) {
 void* RMS::Thread1(void* arg) {
   while (working) {
     sem_wait(sem1A);
+    cout << WORK_COUNT_1 << endl;
     for (int i = 0; i < WORK_COUNT_1; i++){
       DoWork();
     }
@@ -159,6 +159,7 @@ void* RMS::Thread1(void* arg) {
 void* RMS::Thread2(void* arg) {
   while (working) {
     sem_wait(sem2A);
+    cout << WORK_COUNT_2 << endl;
     for (int i = 0; i < WORK_COUNT_2; i++){
       DoWork();
     }
@@ -171,6 +172,7 @@ void* RMS::Thread2(void* arg) {
 void* RMS::Thread3(void* arg) {
   while (working) {
     sem_wait(sem3A);
+    cout << WORK_COUNT_3 << endl;
     for (int i = 0; i < WORK_COUNT_3; i++){
       DoWork();
     }
@@ -183,6 +185,7 @@ void* RMS::Thread3(void* arg) {
 void* RMS::Thread4(void* arg) {
   while (working) {
     sem_wait(sem4A);
+    cout << WORK_COUNT_4 << endl;
     for (int i = 0; i < WORK_COUNT_4; i++){
       DoWork();
     }
@@ -208,7 +211,7 @@ void RMS::Run() {
 
   // Setting Processor Affinity to Core 0
   CPU_ZERO(&cpuset);
-  CPU_SET(1, &cpuset);
+  CPU_SET(0, &cpuset);
   // if ((sched_setaffinity(1, sizeof(cpuset), &cpuset) != 0)) {
   //   cout << "Unable to set policy" << endl;
   // }
@@ -299,18 +302,19 @@ void RMS::Run() {
   pthread_setschedparam(tid_3, SCHED_FIFO, &params3);
   pthread_setschedparam(tid_4, SCHED_FIFO, &params4);
 
-  pthread_setaffinity_np(tid_Sched, sizeof(cpuset), &cpuset);
-  pthread_setaffinity_np(tid_1, sizeof(cpuset), &cpuset);
-  pthread_setaffinity_np(tid_2, sizeof(cpuset), &cpuset);
-  pthread_setaffinity_np(tid_3, sizeof(cpuset), &cpuset);
-  pthread_setaffinity_np(tid_4, sizeof(cpuset), &cpuset);
-
-
   pthread_create(&tid_Sched, NULL, &Scheduler, NULL); // Scheduler Thread
   pthread_create(&tid_1, NULL, &Thread1, NULL); // Execute 100 times
   pthread_create(&tid_2, NULL, &Thread2, NULL); // Execute 200 times
   pthread_create(&tid_3, NULL, &Thread3, NULL); // Execute 400 times
   pthread_create(&tid_4, NULL, &Thread4, NULL); // Execute 1600 times
+
+  int a;
+  a = pthread_setaffinity_np(tid_Sched, sizeof(cpuset), &cpuset);
+  a = pthread_setaffinity_np(tid_1, sizeof(cpuset), &cpuset);
+  a = pthread_setaffinity_np(tid_2, sizeof(cpuset), &cpuset);
+  a = pthread_setaffinity_np(tid_3, sizeof(cpuset), &cpuset);
+  a = pthread_setaffinity_np(tid_4, sizeof(cpuset), &cpuset);
+
 
   //
   // int rc = pthread_getschedparam(tid_1, &policy, &param);
