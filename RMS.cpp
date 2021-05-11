@@ -73,6 +73,7 @@ void* RMS::Scheduler(void* arg) {
     for (j = 0; j < UNIT_COUNT; j++) {
       // cout << "time: " << i*UNIT_COUNT+j << endl;
       // Schedule T1 Every Time Unit
+      runCounter_1++;
       sem_wait(sem1B);
       sem_post(sem1A);
 
@@ -82,6 +83,7 @@ void* RMS::Scheduler(void* arg) {
         if (rc) {
           // sem_wait(sem2B);
           // sem_post(sem2A);
+          runCounter_2++;
         } else {
           missCounter_2++;
         }
@@ -95,6 +97,7 @@ void* RMS::Scheduler(void* arg) {
         if (rc) {
           // sem_wait(sem3B);
           // sem_post(sem3A);
+          runCounter_3++;
         } else {
           missCounter_3++;
         }
@@ -108,6 +111,7 @@ void* RMS::Scheduler(void* arg) {
         if (rc) {
           // sem_wait(sem4B);
           // sem_post(sem4A);
+          runCounter_4++;
         } else {
           missCounter_4++;
         }
@@ -146,7 +150,7 @@ void* RMS::Thread1(void* arg) {
     for (int i = 0; i < WORK_COUNT_1; i++){
       DoWork();
     }
-    runCounter_1++;
+    // runCounter_1++;
     sem_post(sem1B);
   }
   pthread_exit(0);
@@ -158,7 +162,7 @@ void* RMS::Thread2(void* arg) {
     for (int i = 0; i < WORK_COUNT_2; i++){
       DoWork();
     }
-    runCounter_2++;
+    // runCounter_2++;
     sem_post(sem2B);
   }
   pthread_exit(0);
@@ -170,7 +174,7 @@ void* RMS::Thread3(void* arg) {
     for (int i = 0; i < WORK_COUNT_3; i++){
       DoWork();
     }
-    runCounter_3++;
+    // runCounter_3++;
     sem_post(sem3B);
   }
   pthread_exit(0);
@@ -182,7 +186,7 @@ void* RMS::Thread4(void* arg) {
     for (int i = 0; i < WORK_COUNT_4; i++){
       DoWork();
     }
-    runCounter_4++;
+    // runCounter_4++;
     sem_post(sem4B);
   }
   pthread_exit(0);
@@ -198,14 +202,17 @@ void RMS::Run() {
   pthread_attr_init(&attr);
 
   // Setting Schedule Policy to FIFO
-  if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0) {
-    cout << "Unable to set policy" << endl;
-  }
+  // if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0) {
+  //   cout << "Unable to set policy" << endl;
+  // }
 
   // Setting Processor Affinity to Core 0
   CPU_ZERO(&cpuset);
-  CPU_SET(0, &cpuset);
-  sched_setaffinity(0, sizeof(cpuset), &cpuset);
+  CPU_SET(1, &cpuset);
+  // if ((sched_setaffinity(1, sizeof(cpuset), &cpuset) != 0)) {
+  //   cout << "Unable to set policy" << endl;
+  // }
+
   //cout << CPU_COUNT(&cpuset) << endl;
 
 
@@ -292,11 +299,18 @@ void RMS::Run() {
   pthread_setschedparam(tid_3, SCHED_FIFO, &params3);
   pthread_setschedparam(tid_4, SCHED_FIFO, &params4);
 
-  pthread_create(&tid_Sched, &attr, &Scheduler, NULL); // Scheduler Thread
-  pthread_create(&tid_1, &attr, &Thread1, NULL); // Execute 100 times
-  pthread_create(&tid_2, &attr, &Thread2, NULL); // Execute 200 times
-  pthread_create(&tid_3, &attr, &Thread3, NULL); // Execute 400 times
-  pthread_create(&tid_4, &attr, &Thread4, NULL); // Execute 1600 times
+  pthread_setaffinity_np(tid_Sched, sizeof(cpuset), &cpuset);
+  pthread_setaffinity_np(tid_1, sizeof(cpuset), &cpuset);
+  pthread_setaffinity_np(tid_2, sizeof(cpuset), &cpuset);
+  pthread_setaffinity_np(tid_3, sizeof(cpuset), &cpuset);
+  pthread_setaffinity_np(tid_4, sizeof(cpuset), &cpuset);
+
+
+  pthread_create(&tid_Sched, NULL, &Scheduler, NULL); // Scheduler Thread
+  pthread_create(&tid_1, NULL, &Thread1, NULL); // Execute 100 times
+  pthread_create(&tid_2, NULL, &Thread2, NULL); // Execute 200 times
+  pthread_create(&tid_3, NULL, &Thread3, NULL); // Execute 400 times
+  pthread_create(&tid_4, NULL, &Thread4, NULL); // Execute 1600 times
 
   //
   // int rc = pthread_getschedparam(tid_1, &policy, &param);
