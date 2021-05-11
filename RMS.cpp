@@ -61,38 +61,56 @@ void RMS::DoWork() {
 }
 
 void* RMS::Scheduler(void* arg) {
+  int rc; // For checking values of semaphores
   for (i = 0; i < PERIOD_COUNT; i++) {
     for (j = 0; j < UNIT_COUNT; j++) {
       cout << "time: " << i*UNIT_COUNT+j << endl;
       // Schedule T1 Every Time Unit
       cout << "Scheduling 1" << endl;
+      // sem_getvalue(sem1B, &rc);
+      // cout << rc << endl;
       sem_wait(sem1B);
+      // sem_getvalue(sem1B, &rc);
+      // cout << rc << endl;
       sem_post(sem1A);
 
       // Schedule T2 Every 2 Time Units
       if (j % 2 == 0) {
-        cout << "Scheduling 2" << endl;
-        sem_wait(sem2B);
-
-        sem_post(sem2A);
+        sem_getvalue(sem2B, &rc);
+        if (rc) {
+          cout << "Scheduling 2" << endl;
+          sem_wait(sem2B);
+          sem_post(sem2A);
+        } else {
+          cout << "Missed 2" << endl;
+          missCounter_2++;
+        }
       }
 
       // Schedule T3 Every 4 Time Units
       if (j % 4 == 0) {
-        cout << "Scheduling 3" << endl;
-
-        sem_wait(sem3B);
-
-        sem_post(sem3A);
+        sem_getvalue(sem3B, &rc);
+        if (rc) {
+          cout << "Scheduling 3" << endl;
+          sem_wait(sem3B);
+          sem_post(sem3A);
+        } else {
+          cout << "Missed 3" << endl;
+          missCounter_3++;
+        }
       }
 
       // Schedule T4 Every 16 Time Units
       if (j % 16 == 0) {
-        cout << "Scheduling 4" << endl;
-
-        sem_wait(sem4B);
-
-        sem_post(sem4A);
+        sem_getvalue(sem4B, &rc);
+        if (rc) {
+          cout << "Scheduling 4" << endl;
+          sem_wait(sem4B);
+          sem_post(sem4A);
+        } else {
+          cout << "Missed 4" << endl;
+          missCounter_4++;
+        }
       }
       usleep(1000); // 1 millisecond
     }
@@ -103,6 +121,14 @@ void* RMS::Scheduler(void* arg) {
   cout << "Thread 2 ran " << runCounter_2 << " times." << endl;
   cout << "Thread 3 ran " << runCounter_3 << " times." << endl;
   cout << "Thread 4 ran " << runCounter_4 << " times." << endl;
+
+  cout << "-----------" << endl;
+  cout << "Thread 1 missed " << missCounter_1 << " times." << endl;
+  cout << "Thread 2 missed " << missCounter_2 << " times." << endl;
+  cout << "Thread 3 missed " << missCounter_3 << " times." << endl;
+  cout << "Thread 4 missed " << missCounter_4 << " times." << endl;
+
+
   sem_post(sem1A);
   sem_post(sem2A);
   sem_post(sem3A);
