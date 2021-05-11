@@ -23,15 +23,12 @@ int missCounter_4 = 0;
 
 double matrix[10][10];
 
-// Semaphores for the Threads
-sem_t* sem1A;
-sem_t* sem1B;
-sem_t* sem2A;
-sem_t* sem2B;
-sem_t* sem3A;
-sem_t* sem3B;
-sem_t* sem4A;
-sem_t* sem4B;
+// Semaphores
+sem_t* semSched;
+sem_t* sem1;
+sem_t* sem2;
+sem_t* sem3;
+sem_t* sem4;
 
 // Constructor
 RMS::RMS() {}
@@ -60,8 +57,11 @@ void RMS::DoWork() {
 void* RMS::Scheduler(void* arg) {
   for (int i = 0; i < PERIOD_COUNT; i++) {
     for (int j = 0; j < UNIT_COUNT; j++) {
-      // Schedule T1 Every Time Unit
 
+      sem_wait(sem4);
+
+      // Schedule T1 Every Time Unit
+      sem_post(semSched);
 
       // Schedule T2 Every 2 Time Units
       if (j % 2 == 0) {
@@ -84,39 +84,45 @@ void* RMS::Scheduler(void* arg) {
 
 void* RMS::Thread1(void* arg) {
   while (true) {
-    sem_wait(sem1A);
+    sem_wait(semSched);
     for (int i = 0; i < WORK_COUNT_1; i++){
       DoWork();
     }
     runCounter_1++;
-    sem_post(sem1B);
+    sem_post(sem1);
   }
 }
 
 void* RMS::Thread2(void* arg) {
   while (true) {
+    sem_wait(sem1);
     for (int i = 0; i < WORK_COUNT_2; i++){
       DoWork();
     }
     runCounter_2++;
+    sem_post(sem2);
   }
 }
 
 void* RMS::Thread3(void* arg) {
   while (true) {
+    sem_wait(sem2);
     for (int i = 0; i < WORK_COUNT_3; i++){
       DoWork();
-      runCounter_3++;
     }
+    runCounter_3++;
+    sem_post(sem3);
   }
 }
 
 void* RMS::Thread4(void* arg) {
   while (true) {
+    sem_wait(sem3);
     for (int i = 0; i < WORK_COUNT_4; i++){
-      runCounter_4++;
       DoWork();
     }
+    runCounter_4++;
+    sem_post(sem4);
   }
 }
 
@@ -152,67 +158,35 @@ void RMS::Run() {
   //   }
   // }
 
-  // Setting Semaphore 1A
-  sem_unlink(SEM_1_A);
-  sem1A = sem_open(SEM_1_A, O_CREAT, 0777, 0);
-  if (sem1A == SEM_FAILED) {
-    cout << "Failed to open Semaphore 1A" << endl;
-    exit(-1);
-  }
-
-  // Setting Semaphore 1B
-  sem_unlink(SEM_1_B);
-  sem1B = sem_open(SEM_1_B, O_CREAT, 0777, 0);
-  if (sem1B == SEM_FAILED) {
-    cout << "Failed to open Semaphore 1B" << endl;
+  // Setting Semaphore 1
+  sem_unlink(SEM_1);
+  sem1 = sem_open(SEM_1, O_CREAT, 0777, 0);
+  if (sem1 == SEM_FAILED) {
+    cout << "Failed to open Semaphore 1" << endl;
     exit(-1);
   }
 
   // Setting Semaphore 2A
-  sem_unlink(SEM_2_A);
-  sem2A = sem_open(SEM_2_A, O_CREAT, 0777, 0);
-  if (sem2A == SEM_FAILED) {
-    cout << "Failed to open Semaphore 2A" << endl;
-    exit(-1);
-  }
-
-  // Setting Semaphore 2B
-  sem_unlink(SEM_2_B);
-  sem2B = sem_open(SEM_2_B, O_CREAT, 0777, 0);
-  if (sem2B == SEM_FAILED) {
-    cout << "Failed to open Semaphore 2B" << endl;
+  sem_unlink(SEM_2);
+  sem2 = sem_open(SEM_2, O_CREAT, 0777, 0);
+  if (sem2 == SEM_FAILED) {
+    cout << "Failed to open Semaphore 2" << endl;
     exit(-1);
   }
 
   // Setting Semaphore 3A
-  sem_unlink(SEM_3_A);
-  sem3A = sem_open(SEM_3_A, O_CREAT, 0777, 0);
-  if (sem3A == SEM_FAILED) {
-    cout << "Failed to open Semaphore 3A" << endl;
-    exit(-1);
-  }
-
-  // Setting Semaphore 3B
-  sem_unlink(SEM_3_B);
-  sem3B = sem_open(SEM_3_B, O_CREAT, 0777, 0);
-  if (sem3B == SEM_FAILED) {
-    cout << "Failed to open Semaphore 3B" << endl;
+  sem_unlink(SEM_3);
+  sem3 = sem_open(SEM_3, O_CREAT, 0777, 0);
+  if (sem3 == SEM_FAILED) {
+    cout << "Failed to open Semaphore 3" << endl;
     exit(-1);
   }
 
   // Setting Semaphore 4A
-  sem_unlink(SEM_4_A);
-  sem4A = sem_open(SEM_4_A, O_CREAT, 0777, 0);
-  if (sem4A == SEM_FAILED) {
-    cout << "Failed to open Semaphore 4A" << endl;
-    exit(-1);
-  }
-
-  // Setting Semaphore 4B
-  sem_unlink(SEM_4_B);
-  sem4B = sem_open(SEM_4_B, O_CREAT, 0777, 0);
-  if (sem4B == SEM_FAILED) {
-    cout << "Failed to open Semaphore 4B" << endl;
+  sem_unlink(SEM_4);
+  sem4 = sem_open(SEM_4, O_CREAT, 0777, 1);
+  if (sem4 == SEM_FAILED) {
+    cout << "Failed to open Semaphore 4" << endl;
     exit(-1);
   }
 
@@ -247,12 +221,8 @@ void RMS::Run() {
   pthread_join(tid_3, NULL);
   pthread_join(tid_4, NULL);
 
-  sem_close(sem1A);
-  sem_close(sem1B);
-  sem_close(sem2A);
-  sem_close(sem2B);
-  sem_close(sem3A);
-  sem_close(sem3B);
-  sem_close(sem4A);
-  sem_close(sem4B);
+  sem_close(sem1);
+  sem_close(sem2);
+  sem_close(sem3);
+  sem_close(sem4);
 }
