@@ -33,9 +33,7 @@ RMS::RMS() {
 }
 
 // A horribly inefficient function
-void* RMS::DoWork(void* arg) {
-  // sem_wait(semWilma);
-
+void RMS::DoWork(void* arg) {
   // Initializing the matrix to 1's
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
@@ -45,6 +43,7 @@ void* RMS::DoWork(void* arg) {
 
   // Multiplying operation
   int count = *((int*)arg);
+  cout << count << endl;
   for (int x = 0; x < count; x++) {
     double curr = 1.0;
     for (int j = 0; j < 5; j++) {
@@ -54,17 +53,6 @@ void* RMS::DoWork(void* arg) {
       for (int i = 0; i < 10; i++) {
         curr *= matrix[i][j+5];
       }
-    }
-
-    // Increment Run Counters
-    if (count == workCount_1) {
-      runCounter_1++;
-    } else if (count == workCount_2) {
-      runCounter_2++;
-    } else if (count == workCount_3) {
-      runCounter_3++;
-    } else {
-      runCounter_4++;
     }
   }
 
@@ -87,6 +75,7 @@ void RMS::Run() {
   int policy;
   pthread_attr_t attr;
   cpu_set_t cpuset;
+  struct sched_param param;
 
   pthread_attr_init(&attr);
 
@@ -98,7 +87,7 @@ void RMS::Run() {
   CPU_ZERO(&cpuset);
   CPU_SET(0, &cpuset);
   sched_setaffinity(0, sizeof(cpuset), &cpuset);
-  cout << CPU_COUNT(&cpuset) << endl;
+  //cout << CPU_COUNT(&cpuset) << endl;
 
   // if (pthread_attr_getschedpolicy(&attr, &policy) != 0) {
   //   cout << "unable to get policy" << endl;
@@ -132,13 +121,28 @@ void RMS::Run() {
   pthread_t tid_3;
   pthread_t tid_4;
 
-  pthread_create(&tid_1, &attr, &DoWork, (void*)&workCount_1); // Execute 100 times
-int s;
-// s = pthread_getaffinity_np(tid_1, sizeof(cpuset), &cpuset);
+  // pthread_setschedparam(tid_1, policy, &param);
+  // pthread_setschedparam(tid_2, policy, &param);
+  // pthread_setschedparam(tid_3, policy, &param);
+  // pthread_setschedparam(tid_4, policy, &param);
 
+
+  pthread_create(&tid_1, &attr, &DoWork, (void*)&workCount_1); // Execute 100 times
   pthread_create(&tid_2, &attr, &DoWork, (void*)&workCount_2); // Execute 200 times
   pthread_create(&tid_3, &attr, &DoWork, (void*)&workCount_3); // Execute 400 times
   pthread_create(&tid_4, &attr, &DoWork, (void*)&workCount_4); // Execute 1600 times
+
+  cout << sched_get_priority_max(policy) << endl;
+  cout << sched_get_priority_min(policy) << endl;
+
+  int rc = pthread_getschedparam(tid_1, &policy, &param);
+  cout << rc << endl;
+  rc = pthread_getschedparam(tid_2, &policy, &param);
+  cout << rc << endl;
+  rc = pthread_getschedparam(tid_3, &policy, &param);
+  cout << rc << endl;
+  rc = pthread_getschedparam(tid_4, &policy, &param);
+  cout << rc << endl;
 
   // Joining the child threads with this thread
   pthread_join(tid_1, NULL);
