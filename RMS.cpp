@@ -126,21 +126,24 @@ void RMS::Run() {
     exit(-1);
   }
 
-  // Creating child threads
+  pthread_t scheduler;
   pthread_t tid_1;
   pthread_t tid_2;
   pthread_t tid_3;
   pthread_t tid_4;
 
-  pthread_create(&tid_1, &attr, &DoWork, (void*)&workCount_1); // Execute 100 times
+
+  pthread_create(&scheduler, &attr, scheduler, NULL);
+  pthread_create(&tid_1, &attr, &thread_1, NULL); // Execute 100 times
 int s;
 // s = pthread_getaffinity_np(tid_1, sizeof(cpuset), &cpuset);
 
-  pthread_create(&tid_2, &attr, &DoWork, (void*)&workCount_2); // Execute 200 times
-  pthread_create(&tid_3, &attr, &DoWork, (void*)&workCount_3); // Execute 400 times
-  pthread_create(&tid_4, &attr, &DoWork, (void*)&workCount_4); // Execute 1600 times
+  pthread_create(&tid_2, &attr, &thread_2, NULL); // Execute 200 times
+  pthread_create(&tid_3, &attr, &thread_3, NULL); // Execute 400 times
+  pthread_create(&tid_4, &attr, &thread_4, NULL); // Execute 1600 times
 
   // Joining the child threads with this thread
+  pthread_join(scheduler, NULL);
   pthread_join(tid_1, NULL);
   pthread_join(tid_2, NULL);
   pthread_join(tid_3, NULL);
@@ -148,4 +151,16 @@ int s;
 
   sem_close(semFred);
   sem_close(semWilma);
+}
+
+void* RMS::thread_1(void* arg) {
+}
+
+void* RMS::thread_2(void* arg) {
+}
+
+void* RMS::thread_3(void* arg) {
+}
+
+void* RMS::thread_4(void* arg) {
 }
