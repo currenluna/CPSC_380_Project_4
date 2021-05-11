@@ -37,6 +37,13 @@ sem_t* sem3B;
 sem_t* sem4A;
 sem_t* sem4B;
 
+// Parameters for the Threads
+struct sched_param paramsSched;
+struct sched_param params1;
+struct sched_param params2;
+struct sched_param params3;
+struct sched_param params4;
+
 // Constructor
 RMS::RMS() {}
 
@@ -191,10 +198,10 @@ void RMS::Run() {
   int policy;
   pthread_attr_t attr;
   cpu_set_t cpuset;
-  struct sched_param param;
 
   pthread_attr_init(&attr);
 
+  // Setting Schedule Policy to FIFO
   if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0) {
     cout << "Unable to set policy" << endl;
   }
@@ -205,17 +212,6 @@ void RMS::Run() {
   sched_setaffinity(0, sizeof(cpuset), &cpuset);
   //cout << CPU_COUNT(&cpuset) << endl;
 
-  // if (pthread_attr_getschedpolicy(&attr, &policy) != 0) {
-  //   cout << "unable to get policy" << endl;
-  // } else {
-  //   if (policy == SCHED_OTHER) {
-  //     cout << "other" << endl;
-  //   } else if (policy == SCHED_RR) {
-  //     cout << "rr" << endl;
-  //   } else if (policy == SCHED_FIFO) {
-  //     cout << "FIFO" << endl;
-  //   }
-  // }
 
   // Setting Semaphore 1A
   sem_unlink(SEM_1_A);
@@ -294,8 +290,6 @@ void RMS::Run() {
   pthread_create(&tid_3, &attr, &Thread3, NULL); // Execute 400 times
   pthread_create(&tid_4, &attr, &Thread4, NULL); // Execute 1600 times
 
-  // cout << sched_get_priority_max(policy) << endl;
-  // cout << sched_get_priority_min(policy) << endl;
   //
   // int rc = pthread_getschedparam(tid_1, &policy, &param);
   // cout << rc << endl;
@@ -313,6 +307,26 @@ void RMS::Run() {
   pthread_join(tid_3, NULL);
   pthread_join(tid_4, NULL);
 
+
+// THIS IS CAUSING A DEADLOCK
+
+
+  paramsSched.sched_priority = 99;
+  params1.sched_priority = 98;
+  params2.sched_priority = 97;
+  params3.sched_priority = 96;
+  params4.sched_priority = 95;
+
+// THIS IS CAUSING A DEADLOCK
+
+
+  pthread_setschedparam(tid_Sched, SCHED_FIFO, &paramsSched);
+  pthread_setschedparam(tid_1, SCHED_FIFO, &params1);
+  pthread_setschedparam(tid_2, SCHED_FIFO, &params2);
+  pthread_setschedparam(tid_3, SCHED_FIFO, &params3);
+  pthread_setschedparam(tid_4, SCHED_FIFO, &params4);
+
+  cout << params1.sched_priority << endl;
 
   sem_close(sem1A);
   sem_close(sem1B);
