@@ -71,58 +71,53 @@ void* RMS::Scheduler(void* arg) {
   int rc; // For checking values of semaphores
   for (i = 0; i < PERIOD_COUNT; i++) {
     for (j = 0; j < UNIT_COUNT; j++) {
-      cout << "time: " << i*UNIT_COUNT+j << endl;
+      // cout << "time: " << i*UNIT_COUNT+j << endl;
       // Schedule T1 Every Time Unit
-      cout << "Scheduling 1" << endl;
-      // sem_getvalue(sem1B, &rc);
-      // cout << rc << endl;
       sem_wait(sem1B);
-      // sem_getvalue(sem1B, &rc);
-      // cout << rc << endl;
       sem_post(sem1A);
 
       // Schedule T2 Every 2 Time Units
       if (j % 2 == 0) {
         sem_getvalue(sem2B, &rc);
         if (rc) {
-          cout << "Scheduling 2" << endl;
-          sem_wait(sem2B);
-          sem_post(sem2A);
+          // sem_wait(sem2B);
+          // sem_post(sem2A);
         } else {
-          cout << "Missed 2" << endl;
           missCounter_2++;
         }
+        sem_wait(sem2B);
+        sem_post(sem2A);
       }
 
       // Schedule T3 Every 4 Time Units
       if (j % 4 == 0) {
         sem_getvalue(sem3B, &rc);
         if (rc) {
-          cout << "Scheduling 3" << endl;
-          sem_wait(sem3B);
-          sem_post(sem3A);
+          // sem_wait(sem3B);
+          // sem_post(sem3A);
         } else {
-          cout << "Missed 3" << endl;
           missCounter_3++;
         }
+        sem_wait(sem3B);
+        sem_post(sem3A);
       }
 
       // Schedule T4 Every 16 Time Units
       if (j % 16 == 0) {
         sem_getvalue(sem4B, &rc);
         if (rc) {
-          cout << "Scheduling 4" << endl;
-          sem_wait(sem4B);
-          sem_post(sem4A);
+          // sem_wait(sem4B);
+          // sem_post(sem4A);
         } else {
-          cout << "Missed 4" << endl;
           missCounter_4++;
         }
+        sem_wait(sem4B);
+        sem_post(sem4A);
       }
       usleep(1000); // 1 millisecond
     }
   }
-  working = false;
+
   cout << "-----------" << endl;
   cout << "Thread 1 ran " << runCounter_1 << " times." << endl;
   cout << "Thread 2 ran " << runCounter_2 << " times." << endl;
@@ -140,6 +135,7 @@ void* RMS::Scheduler(void* arg) {
   sem_post(sem2A);
   sem_post(sem3A);
   sem_post(sem4A);
+  working = false;
 
   pthread_exit(0);
 }
@@ -284,6 +280,18 @@ void RMS::Run() {
   pthread_t tid_3;
   pthread_t tid_4;
 
+  paramsSched.sched_priority = 99;
+  params1.sched_priority = 98;
+  params2.sched_priority = 97;
+  params3.sched_priority = 96;
+  params4.sched_priority = 95;
+
+  pthread_setschedparam(tid_Sched, SCHED_FIFO, &paramsSched);
+  pthread_setschedparam(tid_1, SCHED_FIFO, &params1);
+  pthread_setschedparam(tid_2, SCHED_FIFO, &params2);
+  pthread_setschedparam(tid_3, SCHED_FIFO, &params3);
+  pthread_setschedparam(tid_4, SCHED_FIFO, &params4);
+
   pthread_create(&tid_Sched, &attr, &Scheduler, NULL); // Scheduler Thread
   pthread_create(&tid_1, &attr, &Thread1, NULL); // Execute 100 times
   pthread_create(&tid_2, &attr, &Thread2, NULL); // Execute 200 times
@@ -303,30 +311,14 @@ void RMS::Run() {
   // Joining the child threads with this thread
   pthread_join(tid_Sched, NULL);
   pthread_join(tid_1, NULL);
+  cout << "here" << endl;
+
   pthread_join(tid_2, NULL);
   pthread_join(tid_3, NULL);
   pthread_join(tid_4, NULL);
 
 
-// THIS IS CAUSING A DEADLOCK
 
-
-  paramsSched.sched_priority = 99;
-  params1.sched_priority = 98;
-  params2.sched_priority = 97;
-  params3.sched_priority = 96;
-  params4.sched_priority = 95;
-
-// THIS IS CAUSING A DEADLOCK
-
-
-  pthread_setschedparam(tid_Sched, SCHED_FIFO, &paramsSched);
-  pthread_setschedparam(tid_1, SCHED_FIFO, &params1);
-  pthread_setschedparam(tid_2, SCHED_FIFO, &params2);
-  pthread_setschedparam(tid_3, SCHED_FIFO, &params3);
-  pthread_setschedparam(tid_4, SCHED_FIFO, &params4);
-
-  cout << params1.sched_priority << endl;
 
   sem_close(sem1A);
   sem_close(sem1B);
