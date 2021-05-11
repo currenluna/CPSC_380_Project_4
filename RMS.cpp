@@ -59,21 +59,23 @@ void RMS::DoWork() {
 void* RMS::Scheduler(void* arg) {
   for (int i = 0; i < PERIOD_COUNT; i++) {
     for (int j = 0; j < UNIT_COUNT; j++) {
-
+      cout << "new round " << endl;
       // Schedule T1 Every Time Unit
       sem_wait(sem1B);
       sem_post(sem1A);
 
       // Schedule T2 Every 2 Time Units
       if (j % 2 == 0) {
+        cout << " here iiii" << endl;
         sem_wait(sem2B);
-        cout << "here " << endl;
 
         sem_post(sem2A);
       }
 
       // Schedule T3 Every 4 Time Units
       if (j % 4 == 0) {
+        cout << " here iiii" << endl;
+
         sem_wait(sem3B);
 
         sem_post(sem3A);
@@ -81,6 +83,8 @@ void* RMS::Scheduler(void* arg) {
 
       // Schedule T4 Every 16 Time Units
       if (j % 16 == 0) {
+        cout << " here iiii" << endl;
+
         sem_wait(sem4B);
 
         sem_post(sem4A);
@@ -190,7 +194,7 @@ void RMS::Run() {
 
   // Setting Semaphore 2A
   sem_unlink(SEM_2_A);
-  sem2A = sem_open(SEM_2_A, O_CREAT, 0777, 0);
+  sem2A = sem_open(SEM_2_A, O_CREAT, 0777, 1);
   if (sem2A == SEM_FAILED) {
     cout << "Failed to open Semaphore 2A" << endl;
     exit(-1);
@@ -207,7 +211,7 @@ void RMS::Run() {
 
   // Setting Semaphore 3A
   sem_unlink(SEM_3_A);
-  sem3A = sem_open(SEM_3_A, O_CREAT, 0777, 0);
+  sem3A = sem_open(SEM_3_A, O_CREAT, 0777, 1);
   if (sem3A == SEM_FAILED) {
     cout << "Failed to open Semaphore 3A" << endl;
     exit(-1);
@@ -223,7 +227,7 @@ void RMS::Run() {
 
   // Setting Semaphore 4A
   sem_unlink(SEM_4_A);
-  sem4A = sem_open(SEM_4_A, O_CREAT, 0777, 0);
+  sem4A = sem_open(SEM_4_A, O_CREAT, 0777, 1);
   if (sem4A == SEM_FAILED) {
     cout << "Failed to open Semaphore 4A" << endl;
     exit(-1);
