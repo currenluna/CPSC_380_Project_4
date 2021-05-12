@@ -84,12 +84,7 @@ void* RMS::Scheduler(void* arg) {
   sigset_t mask; // Mask
   struct sigaction sa; // Sig Action
 
-
-
   struct itimerval it_val;	/* for setting itimer */
-
-
-
 
   // Loop through 10 periods of 16 time units
   int rc; // For checking values of semaphores
@@ -156,7 +151,6 @@ void* RMS::Scheduler(void* arg) {
         exit(1);
       }
 
-
       it_val.it_value.tv_sec = 0;
       it_val.it_value.tv_usec = 50000;
       it_val.it_interval = it_val.it_value;
@@ -178,7 +172,6 @@ void* RMS::Scheduler(void* arg) {
   cout << "Thread 2 missed " << missCounter_2 << " times." << endl;
   cout << "Thread 3 missed " << missCounter_3 << " times." << endl;
   cout << "Thread 4 missed " << missCounter_4 << " times." << endl;
-
 
   sem_post(sem1A);
   sem_post(sem2A);
@@ -378,9 +371,6 @@ void RMS::Run() {
   pthread_join(tid_2, NULL);
   pthread_join(tid_3, NULL);
   pthread_join(tid_4, NULL);
-
-
-
 
   sem_close(sem1A);
   sem_close(sem1B);

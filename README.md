@@ -25,3 +25,4 @@ We couldn't get the processor affinity to work due to the limitations on our com
 - [Using sched_setaffinity()](https://stackoverflow.com/questions/10490756/how-to-use-sched-getaffinity-and-sched-setaffinity-in-linux-from-c)
 - [Thread Priority](http://www.yonch.com/tech/82-linux-thread-priority)
 - [Creating a Periodic Timer](https://katastrophos.net/symbian-dev/GUID-B4039418-6499-555D-AC24-9B49161299F2.html)
+- [Simple Interval Timer](http://web.cs.wpi.edu/~claypool/courses/525-S01/projects/proj2/setitimer.c)
