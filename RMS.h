@@ -4,6 +4,13 @@
 #include <semaphore.h>
 #include <unistd.h>
 #include <errno.h>
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <signal.h>
+#include <time.h>
+
 using namespace std;
 
 /* Curren Taber, Joan Karstrom, and Krishna Narayan
@@ -16,9 +23,11 @@ using namespace std;
 #define PERIOD_COUNT 10
 #define UNIT_COUNT 16
 #define WORK_COUNT_1 100
-#define WORK_COUNT_2 200
+#define WORK_COUNT_2 20000
 #define WORK_COUNT_3 400
 #define WORK_COUNT_4 1600
+#define CLOCKID CLOCK_REALTIME
+#define SIG SIGRTMIN
 
 // Semaphore name for Fred
 #define SEM_SCHED "semSched"

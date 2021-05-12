@@ -67,7 +67,78 @@ void RMS::DoWork() {
   }
 }
 
+static void handler(int sig, siginfo_t *si, void *uc) {
+           /* Note: calling printf() from a signal handler is not safe
+              (and should not be done in production programs), since
+              printf() is not async-signal-safe; see signal-safety(7).
+              Nevertheless, we use printf() here as a simple way of
+              showing that the handler was called. */
+
+  printf("Caught signal %d\n", sig);
+  signal(sig, SIG_IGN);
+}
+
 void* RMS::Scheduler(void* arg) {
+
+  timer_t timerid;
+  struct sigevent sev;
+  struct itimerspec its;
+  long long freq_nanosecs;
+  sigset_t mask;
+  struct sigaction sa;
+
+  /* Establish handler for timer signal */
+
+   printf("Establishing handler for signal %d\n", SIG);
+   sa.sa_flags = SA_SIGINFO;
+   sa.sa_sigaction = handler;
+   sigemptyset(&sa.sa_mask);
+   if (sigaction(SIG, &sa, NULL) == -1)
+       cout << "here" << endl; //errExit("sigaction");
+
+   /* Block timer signal temporarily */
+
+   printf("Blocking signal %d\n", SIG);
+   sigemptyset(&mask);
+   sigaddset(&mask, SIG);
+   if (sigprocmask(SIG_SETMASK, &mask, NULL) == -1)
+       cout << "here" << endl;//errExit("sigprocmask");
+
+   /* Create the timer */
+
+   sev.sigev_notify = SIGEV_SIGNAL;
+   sev.sigev_signo = SIG;
+   sev.sigev_value.sival_ptr = &timerid;
+   if (timer_create(CLOCKID, &sev, &timerid) == -1)
+       cout << "here" << endl;//errExit("timer_create");
+
+   printf("timer ID is 0x%lx\n", (long) timerid);
+
+   /* Start the timer */
+
+   freq_nanosecs = 1;//atoll(argv[2]);
+   its.it_value.tv_sec = freq_nanosecs / 1000000000;
+   its.it_value.tv_nsec = freq_nanosecs % 1000000000;
+   its.it_interval.tv_sec = its.it_value.tv_sec;
+   its.it_interval.tv_nsec = its.it_value.tv_nsec;
+
+   if (timer_settime(timerid, 0, &its, NULL) == -1)
+        cout << "here" << endl;//errExit("timer_settime");
+
+
+   /* Unlock the timer signal, so that timer notification
+      can be delivered */
+
+   printf("Unblocking signal %d\n", SIG);
+   if (sigprocmask(SIG_UNBLOCK, &mask, NULL) == -1)
+       cout << "here" << endl;//errExit("sigprocmask");
+
+
+
+
+
+
+
   int rc; // For checking values of semaphores
   for (i = 0; i < PERIOD_COUNT; i++) {
     for (j = 0; j < UNIT_COUNT; j++) {
@@ -94,6 +165,7 @@ void* RMS::Scheduler(void* arg) {
       // Schedule T3 Every 4 Time Units
       if (j % 4 == 0) {
         sem_getvalue(sem3B, &rc);
+        //cout << "RC 3 IS HERE " << rc << endl;
         if (rc) {
           // sem_wait(sem3B);
           // sem_post(sem3A);
@@ -146,7 +218,7 @@ void* RMS::Scheduler(void* arg) {
 void* RMS::Thread1(void* arg) {
   while (working) {
     sem_wait(sem1A);
-    cout << WORK_COUNT_1 << endl;
+    // cout << WORK_COUNT_1 << endl;
     for (int i = 0; i < WORK_COUNT_1; i++){
       DoWork();
     }
@@ -159,7 +231,7 @@ void* RMS::Thread1(void* arg) {
 void* RMS::Thread2(void* arg) {
   while (working) {
     sem_wait(sem2A);
-    cout << WORK_COUNT_2 << endl;
+    // cout << WORK_COUNT_2 << endl;
     for (int i = 0; i < WORK_COUNT_2; i++){
       DoWork();
     }
@@ -172,7 +244,7 @@ void* RMS::Thread2(void* arg) {
 void* RMS::Thread3(void* arg) {
   while (working) {
     sem_wait(sem3A);
-    cout << WORK_COUNT_3 << endl;
+    // cout << WORK_COUNT_3 << endl;
     for (int i = 0; i < WORK_COUNT_3; i++){
       DoWork();
     }
@@ -185,7 +257,7 @@ void* RMS::Thread3(void* arg) {
 void* RMS::Thread4(void* arg) {
   while (working) {
     sem_wait(sem4A);
-    cout << WORK_COUNT_4 << endl;
+    // cout << WORK_COUNT_4 << endl;
     for (int i = 0; i < WORK_COUNT_4; i++){
       DoWork();
     }
@@ -204,20 +276,17 @@ void RMS::Run() {
 
   pthread_attr_init(&attr);
 
-  // Setting Schedule Policy to FIFO
-  // if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0) {
-  //   cout << "Unable to set policy" << endl;
-  // }
+  //Setting Schedule Policy to FIFO
+  if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0) {
+    cout << "Unable to set policy" << endl;
+  }
 
   // Setting Processor Affinity to Core 0
   CPU_ZERO(&cpuset);
   CPU_SET(0, &cpuset);
-  // if ((sched_setaffinity(1, sizeof(cpuset), &cpuset) != 0)) {
-  //   cout << "Unable to set policy" << endl;
-  // }
-
-  //cout << CPU_COUNT(&cpuset) << endl;
-
+  if ((sched_setaffinity(0, sizeof(cpuset), &cpuset) != 0)) {
+    cout << "Unable to set policy" << endl;
+  }
 
   // Setting Semaphore 1A
   sem_unlink(SEM_1_A);
@@ -302,35 +371,22 @@ void RMS::Run() {
   pthread_setschedparam(tid_3, SCHED_FIFO, &params3);
   pthread_setschedparam(tid_4, SCHED_FIFO, &params4);
 
-  pthread_create(&tid_Sched, NULL, &Scheduler, NULL); // Scheduler Thread
-  pthread_create(&tid_1, NULL, &Thread1, NULL); // Execute 100 times
-  pthread_create(&tid_2, NULL, &Thread2, NULL); // Execute 200 times
-  pthread_create(&tid_3, NULL, &Thread3, NULL); // Execute 400 times
-  pthread_create(&tid_4, NULL, &Thread4, NULL); // Execute 1600 times
+  pthread_create(&tid_Sched, &attr, &Scheduler, NULL); // Scheduler Thread
+  pthread_create(&tid_1, &attr, &Thread1, NULL); // Execute 100 times
+  pthread_create(&tid_2, &attr, &Thread2, NULL); // Execute 200 times
+  pthread_create(&tid_3, &attr, &Thread3, NULL); // Execute 400 times
+  pthread_create(&tid_4, &attr, &Thread4, NULL); // Execute 1600 times
 
   int a;
-  a = pthread_setaffinity_np(tid_Sched, sizeof(cpuset), &cpuset);
-  a = pthread_setaffinity_np(tid_1, sizeof(cpuset), &cpuset);
-  a = pthread_setaffinity_np(tid_2, sizeof(cpuset), &cpuset);
-  a = pthread_setaffinity_np(tid_3, sizeof(cpuset), &cpuset);
-  a = pthread_setaffinity_np(tid_4, sizeof(cpuset), &cpuset);
-
-
-  //
-  // int rc = pthread_getschedparam(tid_1, &policy, &param);
-  // cout << rc << endl;
-  // rc = pthread_getschedparam(tid_2, &policy, &param);
-  // cout << rc << endl;
-  // rc = pthread_getschedparam(tid_3, &policy, &param);
-  // cout << rc << endl;
-  // rc = pthread_getschedparam(tid_4, &policy, &param);
-  // cout << rc << endl;
+  a = pthread_setaffinity_np(tid_Sched, sizeof(cpu_set_t), &cpuset);
+  a = pthread_setaffinity_np(tid_1, sizeof(cpu_set_t), &cpuset);
+  a = pthread_setaffinity_np(tid_2, sizeof(cpu_set_t), &cpuset);
+  a = pthread_setaffinity_np(tid_3, sizeof(cpu_set_t), &cpuset);
+  a = pthread_setaffinity_np(tid_4, sizeof(cpu_set_t), &cpuset);
 
   // Joining the child threads with this thread
   pthread_join(tid_Sched, NULL);
   pthread_join(tid_1, NULL);
-  cout << "here" << endl;
-
   pthread_join(tid_2, NULL);
   pthread_join(tid_3, NULL);
   pthread_join(tid_4, NULL);
