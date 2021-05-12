@@ -28,6 +28,8 @@ int missCounter_4 = 0;
 double matrix[10][10];
 
 // Semaphores for the Threads
+sem_t* semSchedA;
+sem_t* semSchedB;
 sem_t* sem1A;
 sem_t* sem1B;
 sem_t* sem2A;
@@ -67,82 +69,35 @@ void RMS::DoWork() {
   }
 }
 
-static void handler(int sig, siginfo_t *si, void *uc) {
-           /* Note: calling printf() from a signal handler is not safe
-              (and should not be done in production programs), since
-              printf() is not async-signal-safe; see signal-safety(7).
-              Nevertheless, we use printf() here as a simple way of
-              showing that the handler was called. */
-
-  printf("Caught signal %d\n", sig);
-  signal(sig, SIG_IGN);
+static void Handle() {
+  sem_wait(semSchedA);
+  sem_post(semSchedB);
 }
 
 void* RMS::Scheduler(void* arg) {
 
-  timer_t timerid;
-  struct sigevent sev;
-  struct itimerspec its;
-  long long freq_nanosecs;
-  sigset_t mask;
-  struct sigaction sa;
-
-  /* Establish handler for timer signal */
-
-   printf("Establishing handler for signal %d\n", SIG);
-   sa.sa_flags = SA_SIGINFO;
-   sa.sa_sigaction = handler;
-   sigemptyset(&sa.sa_mask);
-   if (sigaction(SIG, &sa, NULL) == -1)
-       cout << "here" << endl; //errExit("sigaction");
-
-   /* Block timer signal temporarily */
-
-   printf("Blocking signal %d\n", SIG);
-   sigemptyset(&mask);
-   sigaddset(&mask, SIG);
-   if (sigprocmask(SIG_SETMASK, &mask, NULL) == -1)
-       cout << "here" << endl;//errExit("sigprocmask");
-
-   /* Create the timer */
-
-   sev.sigev_notify = SIGEV_SIGNAL;
-   sev.sigev_signo = SIG;
-   sev.sigev_value.sival_ptr = &timerid;
-   if (timer_create(CLOCKID, &sev, &timerid) == -1)
-       cout << "here" << endl;//errExit("timer_create");
-
-   printf("timer ID is 0x%lx\n", (long) timerid);
-
-   /* Start the timer */
-
-   freq_nanosecs = 1;//atoll(argv[2]);
-   its.it_value.tv_sec = freq_nanosecs / 1000000000;
-   its.it_value.tv_nsec = freq_nanosecs % 1000000000;
-   its.it_interval.tv_sec = its.it_value.tv_sec;
-   its.it_interval.tv_nsec = its.it_value.tv_nsec;
-
-   if (timer_settime(timerid, 0, &its, NULL) == -1)
-        cout << "here" << endl;//errExit("timer_settime");
+  // Timer variables
+  timer_t timerid; // Timer
+  struct sigevent sev; // Sig Event
+  struct itimerspec its; // I Timer Spec
+  long long freq_nanosecs; // Frequency
+  sigset_t mask; // Mask
+  struct sigaction sa; // Sig Action
 
 
-   /* Unlock the timer signal, so that timer notification
-      can be delivered */
 
-   printf("Unblocking signal %d\n", SIG);
-   if (sigprocmask(SIG_UNBLOCK, &mask, NULL) == -1)
-       cout << "here" << endl;//errExit("sigprocmask");
+  struct itimerval it_val;	/* for setting itimer */
 
 
 
 
-
-
-
+  // Loop through 10 periods of 16 time units
   int rc; // For checking values of semaphores
   for (i = 0; i < PERIOD_COUNT; i++) {
     for (j = 0; j < UNIT_COUNT; j++) {
-      // cout << "time: " << i*UNIT_COUNT+j << endl;
+
+      sem_wait(semSchedB);
+
       // Schedule T1 Every Time Unit
       runCounter_1++;
       sem_wait(sem1B);
@@ -190,7 +145,25 @@ void* RMS::Scheduler(void* arg) {
         sem_wait(sem4B);
         sem_post(sem4A);
       }
-      usleep(1000); // 1 millisecond
+
+      sem_post(semSchedA);
+
+      /* Upon SIGALRM, call Handle().
+       * Set interval timer.  We want frequency in ms,
+       * but the setitimer call needs seconds and useconds. */
+      if (signal(SIGALRM, (void (*)(int)) Handle) == SIG_ERR) {
+        perror("Unable to catch SIGALRM");
+        exit(1);
+      }
+
+
+      it_val.it_value.tv_sec = 0;
+      it_val.it_value.tv_usec = 50000;
+      it_val.it_interval = it_val.it_value;
+      if (setitimer(ITIMER_REAL, &it_val, NULL) == -1) {
+        perror("error calling setitimer()");
+        exit(1);
+      }
     }
   }
   working = false;
@@ -288,6 +261,22 @@ void RMS::Run() {
     cout << "Unable to set policy" << endl;
   }
 
+  // Setting Semaphore Sched A
+  sem_unlink(SEM_SCHED_A);
+  semSchedA = sem_open(SEM_SCHED_A, O_CREAT, 0777, 0);
+  if (semSchedA == SEM_FAILED) {
+    cout << "Failed to open Semaphore Sched A" << endl;
+    exit(-1);
+  }
+
+  // Setting Semaphore Sched B
+  sem_unlink(SEM_SCHED_B);
+  semSchedB = sem_open(SEM_SCHED_B, O_CREAT, 0777, 1);
+  if (semSchedB == SEM_FAILED) {
+    cout << "Failed to open Semaphore Sched B" << endl;
+    exit(-1);
+  }
+
   // Setting Semaphore 1A
   sem_unlink(SEM_1_A);
   sem1A = sem_open(SEM_1_A, O_CREAT, 0777, 0);
@@ -312,7 +301,6 @@ void RMS::Run() {
     exit(-1);
   }
 
-  // Creating child threads
   // Setting Semaphore 2B
   sem_unlink(SEM_2_B);
   sem2B = sem_open(SEM_2_B, O_CREAT, 0777, 1);
