@@ -14,7 +14,7 @@
 
 ## 3. DESCRIPTION
 
-When Main.cpp runs...
+We designed our scheduler so that the scheduler is the main thread, and within the scheduler we dispatch which threads are supposed to be running through the period. We can release/unlock them at the desired frequency by using the modulo function. Synchronization/dispatch of threads through the scheduler happens through semaphores, in a similar fashion to how Fred and Wilma threads were synchronized in project 3. 8 semaphores were used -- half locked, and half unlocked. Initially, thread 1 would be unlocked -- as it finished its task, it would signal the scheduler to then unlock, which would unlock thread 2, which would then finish its task, and signal the scheduler to unlock, which would unlock thread 3, etc. until all four threads had their opportunity (given that they were performing at their desired frequency) to run. At this point, the process is looped and begins again.
 
 ## 3. REFERENCES
 - [Passing Arguments to Threads](https://courses.engr.illinois.edu/cs241/fa2010/ppt/10-pthread-examples.pdf)
