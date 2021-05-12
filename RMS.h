@@ -4,12 +4,12 @@
 #include <semaphore.h>
 #include <unistd.h>
 #include <errno.h>
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
 #include <time.h>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -23,14 +23,15 @@ using namespace std;
 #define PERIOD_COUNT 10
 #define UNIT_COUNT 16
 #define WORK_COUNT_1 100
-#define WORK_COUNT_2 20000
+#define WORK_COUNT_2 200
 #define WORK_COUNT_3 400
 #define WORK_COUNT_4 1600
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
 
 // Semaphore name for Fred
-#define SEM_SCHED "semSched"
+#define SEM_SCHED_A "semSchedA"
+#define SEM_SCHED_B "semSchedB"
 #define SEM_1_A "sem1A"
 #define SEM_1_B "sem1B"
 #define SEM_2_A "sem2A"
@@ -39,7 +40,6 @@ using namespace std;
 #define SEM_3_B "sem3B"
 #define SEM_4_A "sem4A"
 #define SEM_4_B "sem4B"
-
 
 class RMS {
   public:
